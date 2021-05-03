@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingTop="16dp"
+    tools:context=".activities.MainActivity">
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabindicator"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        app:tabBackground="@color/tabBackground"
+        app:tabIndicatorHeight="2dp"
+        app:tabIndicatorFullWidth="false"
+        app:tabIndicatorColor="@color/purple_200"
+        app:tabRippleColor="@color/purple_200"
+        app:tabTextColor="@color/purple_200"
+        app:tabSelectedTextColor="@color/purple_200"
+        app:tabTextAppearance="@style/textStyle">
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/media" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/non_media" />
+
+    </com.google.android.material.tabs.TabLayout>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:layout_marginTop="18dp"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/viewPager"/>
+
+</LinearLayout>

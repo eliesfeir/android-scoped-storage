@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Scoped Storage</string>
+    <string name="media">Media</string>
+    <string name="non_media">Non media</string>
+</resources>

@@ -20,6 +20,8 @@ import com.example.scopedstorage.utils.Utils.Companion.getRawUri
 import com.example.scopedstorage.utils.extensions.toByteArray
 import com.example.scopedstorage.utils.toByteArray
 import kotlinx.android.synthetic.main.fragment_media_store.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class MediaStoreFragment : Fragment() {
@@ -57,7 +59,9 @@ class MediaStoreFragment : Fragment() {
         }
 
         BtnReadImage.setOnClickListener {
-            getFileList(requireContext(), MediaStoreOperations.MediaStoreFileType.IMAGE)
+            GlobalScope.launch {
+                getFileList(requireActivity(), MediaStoreOperations.MediaStoreFileType.IMAGE)
+            }
         }
 
         // ============== Video ===================
@@ -67,7 +71,10 @@ class MediaStoreFragment : Fragment() {
         }
 
         BtnReadVideo.setOnClickListener {
-            getFileList(requireContext(), MediaStoreOperations.MediaStoreFileType.VIDEO)
+            GlobalScope.launch {
+                getFileList(requireActivity(), MediaStoreOperations.MediaStoreFileType.VIDEO)
+            }
+
         }
 
         // ============== Audio ===================
@@ -77,7 +84,10 @@ class MediaStoreFragment : Fragment() {
         }
 
         BtnReadAudio.setOnClickListener {
-            getFileList(requireContext(), MediaStoreOperations.MediaStoreFileType.AUDIO)
+            GlobalScope.launch {
+                getFileList(requireActivity(), MediaStoreOperations.MediaStoreFileType.AUDIO)
+            }
+
         }
     }
 
@@ -87,7 +97,7 @@ class MediaStoreFragment : Fragment() {
             R.drawable.android
         )
         MediaStoreOperations.createFile(
-            context = requireContext(),
+            context = requireActivity(),
             fileName = "temp_image.jpg",
             mimeType = "jpeg",
             MediaStoreOperations.MediaStoreFileType.IMAGE,
@@ -99,7 +109,7 @@ class MediaStoreFragment : Fragment() {
         val video = getRawUri(requireContext(), R.raw.android_studio)
         video?.toByteArray(requireContext())?.let { video ->
             MediaStoreOperations.createFile(
-                context = requireContext(),
+                context = requireActivity(),
                 fileName = "temp_video.mp4",
                 mimeType = "mp4",
                 MediaStoreOperations.MediaStoreFileType.VIDEO,
@@ -112,7 +122,7 @@ class MediaStoreFragment : Fragment() {
         val audio = getRawUri(requireContext(), R.raw.android_studio_audio)
         audio?.toByteArray(requireContext())?.let { audio ->
             MediaStoreOperations.createFile(
-                context = requireContext(),
+                context = requireActivity(),
                 fileName = "temp_audio.mp3",
                 mimeType = "mp3",
                 MediaStoreOperations.MediaStoreFileType.AUDIO,

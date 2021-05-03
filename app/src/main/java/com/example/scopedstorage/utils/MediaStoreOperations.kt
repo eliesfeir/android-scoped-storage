@@ -1,5 +1,6 @@
 package com.example.scopedstorage.utils
 
+import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
@@ -7,8 +8,10 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.example.scopedstorage.utils.Utils.Companion.ensureDirExists
 import com.example.scopedstorage.utils.Utils.Companion.getAppName
+import com.example.scopedstorage.utils.Utils.Companion.showDialog
 import dev.dnights.scopedstoragesample.mediastore.data.MediaFileData
 import java.io.FileOutputStream
 import java.util.*
@@ -29,57 +32,63 @@ class MediaStoreOperations {
     companion object {
 
         fun createFile(
-            context: Context,
+            context: Activity,
             fileName: String,
             mimeType: String,
             fileType: MediaStoreFileType,
             fileContents: ByteArray
-        ) {
-            val contentValues = ContentValues()
+        ): Uri? {
+            var uri: Uri? = null
+            try {
+                val contentValues = ContentValues()
 
-            /**
-             * image allowed directories are [DCIM, Pictures]
-             * audio allowed directories are [Alarms, Music, Notifications, Podcasts, Ringtones]
-             * video allowed directories are [DCIM, Movies]
-             */
-            val filePath = "/" + getAppName(context) + fileType.pathByDCIM
-            when (fileType) {
-                MediaStoreFileType.IMAGE -> {
-                    setImageValues(contentValues, filePath, fileName)
+                /**
+                 * image allowed directories are [DCIM, Pictures]
+                 * audio allowed directories are [Alarms, Music, Notifications, Podcasts, Ringtones]
+                 * video allowed directories are [DCIM, Movies]
+                 */
+                val filePath = "/" + getAppName(context) + fileType.pathByDCIM
+                when (fileType) {
+                    MediaStoreFileType.IMAGE -> {
+                        setImageValues(contentValues, filePath, fileName)
+                    }
+                    MediaStoreFileType.AUDIO -> {
+                        setAudioValues(contentValues, filePath, fileName)
+                    }
+                    MediaStoreFileType.VIDEO -> {
+                        setVideoValues(contentValues, filePath, fileName)
+                    }
                 }
-                MediaStoreFileType.AUDIO -> {
-                    setAudioValues(contentValues, filePath, fileName)
+
+                fileType.mimeType = fileType.mimeType + mimeType
+                contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, fileName)
+                contentValues.put(MediaStore.Files.FileColumns.MIME_TYPE, fileType.mimeType)
+                if (isScopedStorage()) {
+                    contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1)
                 }
-                MediaStoreFileType.VIDEO -> {
-                    setVideoValues(contentValues, filePath, fileName)
+
+                uri = context.contentResolver.insert(
+                    fileType.externalContentUri,
+                    contentValues
+                )
+
+                val parcelFileDescriptor =
+                    context.contentResolver.openFileDescriptor(uri!!, "w", null)
+
+                val fileOutputStream = FileOutputStream(parcelFileDescriptor!!.fileDescriptor)
+                fileOutputStream.write(fileContents)
+                fileOutputStream.close()
+
+                contentValues.clear()
+                if (isScopedStorage()) {
+                    contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0)
                 }
+                context.contentResolver.update(uri, contentValues, null, null)
+            } catch (ex: Exception) {
+                showDialog(context, message = ex.message.orEmpty(), isError = true)
             }
-
-            fileType.mimeType = fileType.mimeType + mimeType
-            contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, fileName)
-            contentValues.put(MediaStore.Files.FileColumns.MIME_TYPE, fileType.mimeType)
-            if (isScopedStorage()) {
-                contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1)
-            }
-
-            val uri = context.contentResolver.insert(
-                fileType.externalContentUri,
-                contentValues
-            )
-
-            val parcelFileDescriptor =
-                context.contentResolver.openFileDescriptor(uri!!, "w", null)
-
-            val fileOutputStream = FileOutputStream(parcelFileDescriptor!!.fileDescriptor)
-            fileOutputStream.write(fileContents)
-            fileOutputStream.close()
-
-            contentValues.clear()
-            if (isScopedStorage()) {
-                contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0)
-            }
-            context.contentResolver.update(uri, contentValues, null, null)
-
+            showDialog(context)
+            return uri
         }
 
         private fun setVideoValues(
@@ -141,56 +150,62 @@ class MediaStoreOperations {
             return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
         }
 
-        fun getFileList(
-            context: Context,
+        suspend fun getFileList(
+            context: Activity,
             type: MediaStoreFileType,
             fileName: String = ""
         ): List<MediaFileData> {
-
             val fileList = mutableListOf<MediaFileData>()
-            val projection = arrayOf(
-                MediaStore.Files.FileColumns._ID,
-                MediaStore.Files.FileColumns.DISPLAY_NAME,
-                MediaStore.Files.FileColumns.DATE_MODIFIED
-            )
+            try {
 
-            val sortOrder = "${MediaStore.Files.FileColumns.DATE_MODIFIED} DESC"
+                val projection = arrayOf(
+                    MediaStore.Files.FileColumns._ID,
+                    MediaStore.Files.FileColumns.DISPLAY_NAME,
+                    MediaStore.Files.FileColumns.DATE_MODIFIED
+                )
 
-            val selection = getSelection(type)
-            val selectionArgs = getSelectionArgs(context, fileName)
+                val sortOrder = "${MediaStore.Files.FileColumns.DATE_MODIFIED} DESC"
 
-            val cursor = context.contentResolver.query(
-                type.externalContentUri,
-                projection,
-                selection,
-                selectionArgs,
-                sortOrder
-            )
+                val selection = getSelection(type)
+                val selectionArgs = getSelectionArgs(context, fileName)
 
-            cursor?.use {
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
-                val dateTakenColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)
-                val displayNameColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idColumn)
-                    val dateTaken = Date(cursor.getLong(dateTakenColumn))
-                    val displayName = cursor.getString(displayNameColumn)
-                    val contentUri = Uri.withAppendedPath(
-                        type.externalContentUri,
-                        id.toString()
-                    )
+                val cursor = context.contentResolver.query(
+                    type.externalContentUri,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    sortOrder
+                )
 
-                    Log.d(
-                        "test",
-                        "id: $id, display_name: $displayName, date_taken: $dateTaken, content_uri: $contentUri\n"
-                    )
+                cursor?.use {
+                    val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
+                    val dateTakenColumn =
+                        cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)
+                    val displayNameColumn =
+                        cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(idColumn)
+                        val dateTaken = Date(cursor.getLong(dateTakenColumn))
+                        val displayName = cursor.getString(displayNameColumn)
+                        val contentUri = Uri.withAppendedPath(
+                            type.externalContentUri,
+                            id.toString()
+                        )
 
-                    fileList.add(MediaFileData(id, dateTaken, displayName, contentUri))
+                        Log.d(
+                            "test",
+                            "id: $id, display_name: $displayName, date_modified: $dateTaken, content_uri: $contentUri\n"
+                        )
+
+                        fileList.add(MediaFileData(id, dateTaken, displayName, contentUri))
+                    }
                 }
-            }
 
+
+            } catch (ex: Exception) {
+                showDialog(context, message = ex.message.orEmpty(), isError = true)
+            }
+            showDialog(context,message = fileList.toString())
             return fileList
         }
 
@@ -213,6 +228,7 @@ class MediaStoreOperations {
             }
 
 
+        @RequiresApi(Build.VERSION_CODES.Q)
         private fun getRelativePath(fileType: MediaStoreFileType) =
             when (fileType) {
                 MediaStoreFileType.IMAGE -> {

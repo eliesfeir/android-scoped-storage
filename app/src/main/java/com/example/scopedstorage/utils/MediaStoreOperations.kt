@@ -13,6 +13,7 @@ import com.example.scopedstorage.utils.Utils.Companion.ensureDirExists
 import com.example.scopedstorage.utils.Utils.Companion.getAppName
 import com.example.scopedstorage.utils.Utils.Companion.showDialog
 import dev.dnights.scopedstoragesample.mediastore.data.MediaFileData
+import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
@@ -186,12 +187,14 @@ class MediaStoreOperations {
             val fileList = mutableListOf<MediaFileData>()
             try {
 
-                val projection = arrayOf(
+                var projection = arrayOf(
                         MediaStore.Files.FileColumns._ID,
                         MediaStore.Files.FileColumns.DISPLAY_NAME,
                         MediaStore.Files.FileColumns.DATE_MODIFIED
                 )
-
+                if (!isScopedStorage()) {
+                    projection = projection.plusElement(MediaStore.Files.FileColumns.DATA)
+                }
                 val sortOrder = "${MediaStore.Files.FileColumns.DATE_MODIFIED} DESC"
 
                 val selection = getSelection(type)
@@ -207,25 +210,33 @@ class MediaStoreOperations {
 
                 cursor?.use {
                     val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
-                    val dateTakenColumn =
+                    val dateModifiedColumn =
                             cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)
                     val displayNameColumn =
                             cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
+                    var pathColumn = -1
+                    if (!isScopedStorage())
+                        pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)
                     while (cursor.moveToNext()) {
                         val id = cursor.getLong(idColumn)
-                        val dateTaken = Date(cursor.getLong(dateTakenColumn))
+                        val dateModified = Date(cursor.getLong(dateModifiedColumn))
                         val displayName = cursor.getString(displayNameColumn)
                         val contentUri = Uri.withAppendedPath(
                                 type.externalContentUri,
                                 id.toString()
                         )
+                        var filePath = ""
+                        if (!isScopedStorage() && pathColumn >= 0) {
+                            filePath = cursor.getString(pathColumn)
+                        }
+
 
                         Log.d(
                                 "test",
-                                "id: $id, display_name: $displayName, date_modified: $dateTaken, content_uri: $contentUri\n"
+                                "id: $id, display_name: $displayName, date_modified: $dateModified, content_uri: $contentUri\n"
                         )
 
-                        fileList.add(MediaFileData(id, dateTaken, displayName, contentUri))
+                        fileList.add(MediaFileData(id = id, dateModified = dateModified, displayName = displayName, uri = contentUri, path = filePath))
                     }
                 }
 
@@ -289,7 +300,7 @@ class MediaStoreOperations {
             try {
                 val list = getFileList(activity, type = fileType, fileName = fileName)
                 if (list.size > 0) {
-                    removeMediaFile(activity, list.get(0).uri)
+                    removeMediaFile(activity, list.get(0))
                 }
                 return true
             } catch (ex: Exception) {
@@ -301,12 +312,19 @@ class MediaStoreOperations {
          * @return true if file deleted successfully, false otherwise
          * @param uri uri of a file
          */
-        fun removeMediaFile(context: Context, uri: Uri): Boolean {
+        fun removeMediaFile(context: Context, media: MediaFileData): Boolean {
             try {
 
-                uri.let {
+                media.uri.let { uri ->
                     context.contentResolver.delete(uri, null, null)
-                    Log.d("test", "Removed MediaStore: $it")
+                    if (!isScopedStorage()) {
+                        if (!media.path.isNullOrBlank()) {
+                            val file = File(media.path)
+                            if (file.exists())
+                                file.delete()
+                        }
+                    }
+                    Log.d("test", "Removed MediaStore: $uri")
                     return true
                 }
             } catch (ex: Exception) {

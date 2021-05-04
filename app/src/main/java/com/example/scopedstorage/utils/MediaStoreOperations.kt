@@ -38,6 +38,7 @@ class MediaStoreOperations {
             fileType: MediaStoreFileType,
             fileContents: ByteArray
         ): Uri? {
+            var isError = false
             var uri: Uri? = null
             try {
                 val contentValues = ContentValues()
@@ -60,9 +61,8 @@ class MediaStoreOperations {
                     }
                 }
 
-                fileType.mimeType = fileType.mimeType + mimeType
                 contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, fileName)
-                contentValues.put(MediaStore.Files.FileColumns.MIME_TYPE, fileType.mimeType)
+                contentValues.put(MediaStore.Files.FileColumns.MIME_TYPE, fileType.mimeType + mimeType)
                 if (isScopedStorage()) {
                     contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1)
                 }
@@ -79,15 +79,17 @@ class MediaStoreOperations {
                 fileOutputStream.write(fileContents)
                 fileOutputStream.close()
 
-                contentValues.clear()
                 if (isScopedStorage()) {
+//                    contentValues.clear()
                     contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0)
                 }
                 context.contentResolver.update(uri, contentValues, null, null)
             } catch (ex: Exception) {
+                isError = true
                 showDialog(context, message = ex.message.orEmpty(), isError = true)
             }
-            showDialog(context)
+            if (!isError)
+                showDialog(context)
             return uri
         }
 
@@ -146,7 +148,6 @@ class MediaStoreOperations {
         }
 
         private fun isScopedStorage(): Boolean {
-//            return false//todo test with
             return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
         }
 
@@ -193,8 +194,8 @@ class MediaStoreOperations {
                         )
 
                         Log.d(
-                            "test",
-                            "id: $id, display_name: $displayName, date_modified: $dateTaken, content_uri: $contentUri\n"
+                                "test",
+                                "id: $id, display_name: $displayName, date_modified: $dateTaken, content_uri: $contentUri\n"
                         )
 
                         fileList.add(MediaFileData(id, dateTaken, displayName, contentUri))
@@ -205,7 +206,6 @@ class MediaStoreOperations {
             } catch (ex: Exception) {
                 showDialog(context, message = ex.message.orEmpty(), isError = true)
             }
-            showDialog(context,message = fileList.toString())
             return fileList
         }
 
@@ -242,5 +242,49 @@ class MediaStoreOperations {
                 }
                 else -> ""
             }
+
+
+        /**
+         * @return true if file is deleted, false otherwise
+         * @param fileType Image,Video,Audio
+         * @param fileName with or without extension
+         */
+        suspend fun removeFileIfExists(activity: Activity, fileType: MediaStoreOperations.MediaStoreFileType, fileName: String): Boolean {
+            try {
+                val list = getFileList(activity, type = fileType, fileName = fileName)
+                if (list.size > 0) {
+                    removeMediaFile(activity, list.get(0).uri)
+                }
+                return true
+            } catch (ex: Exception) {
+                return false
+            }
+        }
+
+        /**
+         * @return true if file deleted successfully, false otherwise
+         * @param uri uri of a file
+         */
+        fun removeMediaFile(context: Context, uri: Uri): Boolean {
+            try {
+
+                uri.let {
+                    context.contentResolver.delete(uri, null, null)
+                    return true
+                    Log.d("test", "Removed MediaStore: $it")
+                }
+            } catch (ex: Exception) {
+                return false
+            }
+        }
+
+        suspend fun getFileByType(activity: Activity,
+                                  type: MediaStoreFileType,
+                                  fileName: String): MediaFileData? {
+            val list = getFileList(activity, type = type, fileName = fileName)
+            if (list.size > 0)
+                return list.get(0)
+            return null
+        }
     }
 }

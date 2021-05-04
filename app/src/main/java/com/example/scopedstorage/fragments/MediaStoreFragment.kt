@@ -90,8 +90,8 @@ class MediaStoreFragment : Fragment() {
             context = requireContext(),
             fileName = "temp_image.jpg",
             mimeType = "jpeg",
-            MediaStoreOperations.MediaStoreFileType.IMAGE,
-            icon.toByteArray()
+            fileType = MediaStoreOperations.MediaStoreFileType.IMAGE,
+            fileContents = icon.toByteArray()
         )
     }
 
@@ -102,8 +102,8 @@ class MediaStoreFragment : Fragment() {
                 context = requireContext(),
                 fileName = "temp_video.mp4",
                 mimeType = "mp4",
-                MediaStoreOperations.MediaStoreFileType.VIDEO,
-                video
+                fileType = MediaStoreOperations.MediaStoreFileType.VIDEO,
+                fileContents = video
             )
         }
     }
@@ -115,8 +115,8 @@ class MediaStoreFragment : Fragment() {
                 context = requireContext(),
                 fileName = "temp_audio.mp3",
                 mimeType = "mp3",
-                MediaStoreOperations.MediaStoreFileType.AUDIO,
-                audio
+                fileType = MediaStoreOperations.MediaStoreFileType.AUDIO,
+                fileContents = audio
             )
         }
     }

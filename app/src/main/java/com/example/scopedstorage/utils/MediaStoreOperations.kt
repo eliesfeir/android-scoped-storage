@@ -18,10 +18,13 @@ import java.util.*
 
 class MediaStoreOperations {
 
+    /**
+     * enum class represents media types
+     */
     enum class MediaStoreFileType(
-        val externalContentUri: Uri,
-        var mimeType: String,
-        val pathByDCIM: String
+            val externalContentUri: Uri,
+            var mimeType: String,
+            val pathByDCIM: String
     ) {
         IMAGE(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/", ""),// ex: /images
         AUDIO(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "audio/", ""),// ex: /audios
@@ -31,12 +34,20 @@ class MediaStoreOperations {
 
     companion object {
 
+        /**
+         * creates a media file using MediaStore
+         * @param fileName send full file name with extension
+         * @param mimeType jpeg,mp3,mp4...
+         * @param fileType MediaStoreFileType.IMAGE,MediaStoreFileType.VIDEO,MediaStoreFileType.AUDIO
+         * @param fileContents media file converted to ByteArray
+         * @return Uri of media file created
+         */
         fun createFile(
-            context: Activity,
-            fileName: String,
-            mimeType: String,
-            fileType: MediaStoreFileType,
-            fileContents: ByteArray
+                context: Activity,
+                fileName: String,
+                mimeType: String,
+                fileType: MediaStoreFileType,
+                fileContents: ByteArray
         ): Uri? {
             var isError = false
             var uri: Uri? = null
@@ -68,12 +79,12 @@ class MediaStoreOperations {
                 }
 
                 uri = context.contentResolver.insert(
-                    fileType.externalContentUri,
-                    contentValues
+                        fileType.externalContentUri,
+                        contentValues
                 )
 
                 val parcelFileDescriptor =
-                    context.contentResolver.openFileDescriptor(uri!!, "w", null)
+                        context.contentResolver.openFileDescriptor(uri!!, "w", null)
 
                 val fileOutputStream = FileOutputStream(parcelFileDescriptor!!.fileDescriptor)
                 fileOutputStream.write(fileContents)
@@ -93,76 +104,92 @@ class MediaStoreOperations {
             return uri
         }
 
+        /**
+         * set Video type content values according to SDK version
+         */
         private fun setVideoValues(
-            contentValues: ContentValues,
-            filePath: String,
-            fileName: String
+                contentValues: ContentValues,
+                filePath: String,
+                fileName: String
         ) {
             if (isScopedStorage()) {
                 contentValues.put(
-                    MediaStore.Files.FileColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_MOVIES + filePath
+                        MediaStore.Files.FileColumns.RELATIVE_PATH,
+                        Environment.DIRECTORY_MOVIES + filePath
                 )
             } else {
                 contentValues.put(
-                    MediaStore.MediaColumns.DATA,
-                    ensureDirExists("${Environment.getExternalStorageDirectory().path}/${Environment.DIRECTORY_MOVIES}$filePath") + "/$fileName"
+                        MediaStore.MediaColumns.DATA,
+                        ensureDirExists("${Environment.getExternalStorageDirectory().path}/${Environment.DIRECTORY_MOVIES}$filePath") + "/$fileName"
                 )
             }
         }
 
+        /**
+         * set Audio type content values according to SDK version
+         */
         private fun setAudioValues(
-            contentValues: ContentValues,
-            filePath: String,
-            fileName: String
+                contentValues: ContentValues,
+                filePath: String,
+                fileName: String
         ) {
             if (isScopedStorage()) {
                 contentValues.put(
-                    MediaStore.Files.FileColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_MUSIC + filePath
+                        MediaStore.Files.FileColumns.RELATIVE_PATH,
+                        Environment.DIRECTORY_MUSIC + filePath
                 )
             } else {
                 contentValues.put(
-                    MediaStore.MediaColumns.DATA,
-                    ensureDirExists("${Environment.getExternalStorageDirectory().path}/${Environment.DIRECTORY_MUSIC}$filePath") + "/$fileName"
+                        MediaStore.MediaColumns.DATA,
+                        ensureDirExists("${Environment.getExternalStorageDirectory().path}/${Environment.DIRECTORY_MUSIC}$filePath") + "/$fileName"
                 )
             }
         }
 
+        /**
+         * set Image type content values according to SDK version
+         */
         private fun setImageValues(
-            contentValues: ContentValues,
-            filePath: String,
-            fileName: String
+                contentValues: ContentValues,
+                filePath: String,
+                fileName: String
         ) {
             if (isScopedStorage()) {
                 contentValues.put(
-                    MediaStore.Files.FileColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_PICTURES + filePath
+                        MediaStore.Files.FileColumns.RELATIVE_PATH,
+                        Environment.DIRECTORY_PICTURES + filePath
                 )
             } else {
                 contentValues.put(
-                    MediaStore.MediaColumns.DATA,
-                    ensureDirExists("${Environment.getExternalStorageDirectory().path}/${Environment.DIRECTORY_PICTURES}$filePath") + "/$fileName"
+                        MediaStore.MediaColumns.DATA,
+                        ensureDirExists("${Environment.getExternalStorageDirectory().path}/${Environment.DIRECTORY_PICTURES}$filePath") + "/$fileName"
                 )
             }
         }
 
-        private fun isScopedStorage(): Boolean {
+        /**
+         * @return boolean that respresents if ScopedStorage supported by current SDK
+         */
+        fun isScopedStorage(): Boolean {
             return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
         }
 
+        /**
+         * get all media files according to type
+         * @return list of media files found
+         */
         suspend fun getFileList(
-            context: Activity,
-            type: MediaStoreFileType,
-            fileName: String = ""
+                context: Activity,
+                type: MediaStoreFileType,
+                fileName: String = ""
         ): List<MediaFileData> {
             val fileList = mutableListOf<MediaFileData>()
             try {
 
                 val projection = arrayOf(
-                    MediaStore.Files.FileColumns._ID,
-                    MediaStore.Files.FileColumns.DISPLAY_NAME,
-                    MediaStore.Files.FileColumns.DATE_MODIFIED
+                        MediaStore.Files.FileColumns._ID,
+                        MediaStore.Files.FileColumns.DISPLAY_NAME,
+                        MediaStore.Files.FileColumns.DATE_MODIFIED
                 )
 
                 val sortOrder = "${MediaStore.Files.FileColumns.DATE_MODIFIED} DESC"
@@ -171,26 +198,26 @@ class MediaStoreOperations {
                 val selectionArgs = getSelectionArgs(context, fileName)
 
                 val cursor = context.contentResolver.query(
-                    type.externalContentUri,
-                    projection,
-                    selection,
-                    selectionArgs,
-                    sortOrder
+                        type.externalContentUri,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        sortOrder
                 )
 
                 cursor?.use {
                     val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
                     val dateTakenColumn =
-                        cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)
+                            cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)
                     val displayNameColumn =
-                        cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
+                            cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
                     while (cursor.moveToNext()) {
                         val id = cursor.getLong(idColumn)
                         val dateTaken = Date(cursor.getLong(dateTakenColumn))
                         val displayName = cursor.getString(displayNameColumn)
                         val contentUri = Uri.withAppendedPath(
-                            type.externalContentUri,
-                            id.toString()
+                                type.externalContentUri,
+                                id.toString()
                         )
 
                         Log.d(
@@ -209,39 +236,48 @@ class MediaStoreOperations {
             return fileList
         }
 
+        /**
+         * get selection args for @see getFileList()
+         */
         private fun getSelectionArgs(context: Context, fileName: String = "") =
 
-            if (isScopedStorage()) {
-                arrayOf("%${getAppName(context)}%", "%${fileName}%")
+                if (isScopedStorage()) {
+                    arrayOf("%${getAppName(context)}%", "%${fileName}%")
 
-            } else {
-                arrayOf("%${getAppName(context)}/${fileName}%")
-            }
+                } else {
+                    arrayOf("%${getAppName(context)}/${fileName}%")
+                }
 
 
+        /**
+         * get selection query for @see getFileList()
+         */
         private fun getSelection(fileType: MediaStoreFileType) =
 
-            if (isScopedStorage()) {
-                getRelativePath(fileType) + " like ? and ${MediaStore.Images.Media.DISPLAY_NAME} like ? "
-            } else {
-                MediaStore.Images.Media.DATA + " like ? "
-            }
+                if (isScopedStorage()) {
+                    getRelativePath(fileType) + " like ? and ${MediaStore.Images.Media.DISPLAY_NAME} like ? "
+                } else {
+                    MediaStore.Images.Media.DATA + " like ? "
+                }
 
 
+        /**
+         * get media relative path used in scoped storage
+         */
         @RequiresApi(Build.VERSION_CODES.Q)
         private fun getRelativePath(fileType: MediaStoreFileType) =
-            when (fileType) {
-                MediaStoreFileType.IMAGE -> {
-                    MediaStore.Images.Media.RELATIVE_PATH
+                when (fileType) {
+                    MediaStoreFileType.IMAGE -> {
+                        MediaStore.Images.Media.RELATIVE_PATH
+                    }
+                    MediaStoreFileType.AUDIO -> {
+                        MediaStore.Audio.Media.RELATIVE_PATH
+                    }
+                    MediaStoreFileType.VIDEO -> {
+                        MediaStore.Video.Media.RELATIVE_PATH
+                    }
+                    else -> ""
                 }
-                MediaStoreFileType.AUDIO -> {
-                    MediaStore.Audio.Media.RELATIVE_PATH
-                }
-                MediaStoreFileType.VIDEO -> {
-                    MediaStore.Video.Media.RELATIVE_PATH
-                }
-                else -> ""
-            }
 
 
         /**
@@ -270,14 +306,17 @@ class MediaStoreOperations {
 
                 uri.let {
                     context.contentResolver.delete(uri, null, null)
-                    return true
                     Log.d("test", "Removed MediaStore: $it")
+                    return true
                 }
             } catch (ex: Exception) {
                 return false
             }
         }
 
+        /**
+         * get specific media file according to type
+         */
         suspend fun getFileByType(activity: Activity,
                                   type: MediaStoreFileType,
                                   fileName: String): MediaFileData? {

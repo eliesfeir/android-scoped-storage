@@ -18,31 +18,55 @@
 
             <TextView
                 android:gravity="center"
-                android:layout_marginStart="16dp"
+                android:layout_width="wrap_content"
                 android:id="@+id/image"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:textSize="14sp"
                 android:layout_gravity="center"
                 android:text="Image" />
 
             <Button
-                android:layout_marginStart="16dp"
+                android:id="@+id/BtnGetListImage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="List"
+                android:textSize="10sp" />
+
+            <Button
+                android:id="@+id/BtnDeleteImage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="Delete"
+                android:textSize="10sp" />
+
+            <Button
+                android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:id="@+id/BtnReadImage"
                 android:layout_width="0dp"
+                android:text="Load"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="Load Image" />
+                android:textSize="10sp" />
 
             <Button
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:id="@+id/BtnSaveImage"
                 android:layout_width="0dp"
+                android:text="Save"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="Save Image" />
+                android:textSize="10sp" />
+
 
         </LinearLayout>
 
@@ -55,68 +79,116 @@
 
             <TextView
                 android:gravity="center"
-                android:layout_marginStart="16dp"
+                android:layout_width="wrap_content"
                 android:id="@+id/video"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:textSize="14sp"
                 android:layout_gravity="center"
                 android:text="Video" />
 
             <Button
-                android:layout_marginStart="16dp"
-                android:layout_weight="1"
-                android:id="@+id/BtnReadVideo"
+                android:id="@+id/BtnGetListVideo"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="Load Video" />
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="List"
+                android:textSize="10sp" />
 
             <Button
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:id="@+id/BtnDeleteVideo"
                 android:layout_weight="1"
-                android:id="@+id/BtnSaveVideo"
+                android:layout_marginStart="8dp"
+                android:text="Delete"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="Save Video" />
+                android:textSize="10sp" />
+
+            <Button
+                android:id="@+id/BtnReadVideo"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:text="Load"
+                android:textSize="10sp" />
+
+            <Button
+                android:id="@+id/BtnSaveVideo"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:text="Save"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:textSize="10sp" />
+
 
         </LinearLayout>
 
         <LinearLayout
-            android:layout_marginTop="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 
             <TextView
-                android:gravity="center"
-                android:layout_marginStart="16dp"
                 android:id="@+id/audio"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Audio" />
+                android:layout_margin="8dp"
+                android:gravity="center"
+                android:text="Audio"
+                android:textSize="14sp" />
 
             <Button
-                android:layout_marginStart="16dp"
+                android:id="@+id/BtnGetListAudio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="8dp"
                 android:layout_weight="1"
+                android:text="List"
+                android:textSize="10sp" />
+
+            <Button
+                android:id="@+id/BtnDeleteAudio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:text="Delete"
+                android:layout_weight="1"
+                android:textSize="10sp" />
+
+            <Button
                 android:id="@+id/BtnReadAudio"
                 android:layout_width="0dp"
+                android:layout_marginStart="8dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="Load Audio" />
+                android:text="Load"
+                android:layout_weight="1"
+                android:textSize="10sp" />
 
             <Button
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_weight="1"
                 android:id="@+id/BtnSaveAudio"
                 android:layout_width="0dp"
+                android:layout_marginStart="8dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="Save Audio" />
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="Save"
+                android:textSize="10sp" />
+
 
         </LinearLayout>
 
@@ -124,7 +196,7 @@
             android:layout_margin="16dp"
             android:id="@+id/rvList"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 

@@ -18,6 +18,7 @@ import com.example.scopedstorage.adapters.MediaFileAdapter
 import com.example.scopedstorage.utils.MediaStoreOperations
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.getFileByType
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.getFileList
+import com.example.scopedstorage.utils.MediaStoreOperations.Companion.isScopedStorage
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.removeFileIfExists
 import com.example.scopedstorage.utils.Utils.Companion.getRawUri
 import com.example.scopedstorage.utils.Utils.Companion.showDialog
@@ -42,9 +43,11 @@ class MediaStoreFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (grantExternalStoragePermission())
+        if (!isScopedStorage() && grantExternalStoragePermission()) {
             init()
-
+        } else {
+            init()
+        }
     }
 
     private fun init() {

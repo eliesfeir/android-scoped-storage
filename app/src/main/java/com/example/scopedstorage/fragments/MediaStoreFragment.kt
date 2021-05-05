@@ -179,8 +179,8 @@ class MediaStoreFragment : Fragment() {
                     context = requireActivity(),
                     fileName = "${imageFileName}.jpg",
                     mimeType = "jpeg",
-                    MediaStoreOperations.MediaStoreFileType.IMAGE,
-                    icon.toByteArray()
+                fileType = MediaStoreOperations.MediaStoreFileType.IMAGE,
+                fileContents = icon.toByteArray()
             )
         }
     }
@@ -198,8 +198,8 @@ class MediaStoreFragment : Fragment() {
                         context = requireActivity(),
                         fileName = "${videoFileName}.mp4",
                         mimeType = "mp4",
-                        MediaStoreOperations.MediaStoreFileType.VIDEO,
-                        video
+                    fileType = MediaStoreOperations.MediaStoreFileType.VIDEO,
+                    fileContents = video
                 )
             }
 
@@ -217,8 +217,8 @@ class MediaStoreFragment : Fragment() {
                         context = requireActivity(),
                         fileName = "${audioFileName}.mp3",
                         mimeType = "mp3",
-                        MediaStoreOperations.MediaStoreFileType.AUDIO,
-                        audio
+                    fileType = MediaStoreOperations.MediaStoreFileType.AUDIO,
+                    fileContents = audio
                 )
             }
         }

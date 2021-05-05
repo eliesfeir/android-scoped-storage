@@ -92,7 +92,7 @@ class MediaStoreOperations {
                 fileOutputStream.close()
 
                 if (isScopedStorage()) {
-//                    contentValues.clear()
+                    contentValues.clear()
                     contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0)
                 }
                 context.contentResolver.update(uri, contentValues, null, null)

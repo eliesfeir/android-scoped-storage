@@ -1,10 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.NonMediaFragment">
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/etFileName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="File Name"
+        android:layout_margin="10dp"/>
+
+    <EditText
+        android:id="@+id/etContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Content"
+        android:layout_margin="10dp"
+        android:minLines="2"/>
+
+    <Button
+        android:id="@+id/btnCreateFile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create File"
+        android:layout_gravity="center"
+        android:layout_margin="10dp"/>
+
+    <Button
+        android:id="@+id/btnOpenPdf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Open Pdf"
+        android:layout_gravity="center"
+        android:layout_margin="10dp"/>
+
+    <TextView
+        android:id="@+id/tvPdfName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"/>
+
+    <Button
+        android:id="@+id/btnDownloadPdf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Download Pdf"
+        android:layout_gravity="center"
+        android:layout_margin="10dp"/>
+
+    <Button
+        android:id="@+id/btnGetDocuments"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Get Documents"
+        android:layout_gravity="center"
+        android:layout_margin="10dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvDocuments"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
 
 
-
-</FrameLayout>
+</LinearLayout>
+</androidx.core.widget.NestedScrollView>

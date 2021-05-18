@@ -1,7 +1,10 @@
 package com.example.scopedstorage.fragments
 
 import android.Manifest
+import android.app.Activity.RESULT_OK
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
@@ -16,10 +19,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.scopedstorage.R
 import com.example.scopedstorage.adapters.MediaFileAdapter
 import com.example.scopedstorage.utils.MediaStoreOperations
+import com.example.scopedstorage.utils.MediaStoreOperations.Companion.getCapturedImage
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.getFileByType
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.getFileList
+import com.example.scopedstorage.utils.MediaStoreOperations.Companion.getPickImageIntent
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.isScopedStorage
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.removeFileIfExists
+import com.example.scopedstorage.utils.PICK_IMAGE_REQUEST_CODE
 import com.example.scopedstorage.utils.Utils.Companion.getRawUri
 import com.example.scopedstorage.utils.Utils.Companion.showDialog
 import com.example.scopedstorage.utils.extensions.toByteArray
@@ -27,6 +33,7 @@ import com.example.scopedstorage.utils.toByteArray
 import kotlinx.android.synthetic.main.fragment_media_store.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 
 
 class MediaStoreFragment : Fragment() {
@@ -67,6 +74,8 @@ class MediaStoreFragment : Fragment() {
         setupVideoActions()
 
         setupAudioActions()
+
+        setupImagePickerAction()
     }
 
     private fun setupAudioActions() {
@@ -179,8 +188,8 @@ class MediaStoreFragment : Fragment() {
                     context = requireActivity(),
                     fileName = "${imageFileName}.jpg",
                     mimeType = "jpeg",
-                fileType = MediaStoreOperations.MediaStoreFileType.IMAGE,
-                fileContents = icon.toByteArray()
+                    fileType = MediaStoreOperations.MediaStoreFileType.IMAGE,
+                    fileContents = icon.toByteArray()
             )
         }
     }
@@ -198,8 +207,8 @@ class MediaStoreFragment : Fragment() {
                         context = requireActivity(),
                         fileName = "${videoFileName}.mp4",
                         mimeType = "mp4",
-                    fileType = MediaStoreOperations.MediaStoreFileType.VIDEO,
-                    fileContents = video
+                        fileType = MediaStoreOperations.MediaStoreFileType.VIDEO,
+                        fileContents = video
                 )
             }
 
@@ -217,8 +226,8 @@ class MediaStoreFragment : Fragment() {
                         context = requireActivity(),
                         fileName = "${audioFileName}.mp3",
                         mimeType = "mp3",
-                    fileType = MediaStoreOperations.MediaStoreFileType.AUDIO,
-                    fileContents = audio
+                        fileType = MediaStoreOperations.MediaStoreFileType.AUDIO,
+                        fileContents = audio
                 )
             }
         }
@@ -232,28 +241,28 @@ class MediaStoreFragment : Fragment() {
     private fun grantExternalStoragePermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_GRANTED
+                            requireContext(),
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED
             ) {
                 Log.d("test", "Permission is granted")
                 true
             } else {
                 Log.d("test", "Permission is revoked")
                 requestPermissions(
-                    arrayOf(
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ),
-                    1
+                        arrayOf(
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        ),
+                        1
                 )
                 false
             }
         } else {
             Toast.makeText(
-                requireContext(),
-                "External Storage Permission is Grant",
-                Toast.LENGTH_SHORT
+                    requireContext(),
+                    "External Storage Permission is Grant",
+                    Toast.LENGTH_SHORT
             ).show()
             Log.d("test", "External Storage Permission is Grant ")
             true
@@ -261,14 +270,47 @@ class MediaStoreFragment : Fragment() {
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
+            requestCode: Int,
+            permissions: Array<String>,
+            grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d("test", "Permission: ${permissions[0]} was ${grantResults[0]}")
             init()
+        }
+    }
+
+    fun setupImagePickerAction() {
+        BtnPickImage.setOnClickListener {
+            pickImage()
+        }
+    }
+
+    private fun pickImage() {
+        startActivityForResult(getPickImageIntent(requireContext()), PICK_IMAGE_REQUEST_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == RESULT_OK && requestCode == PICK_IMAGE_REQUEST_CODE) {
+            handleSelectedBitmap(data)
+        }
+    }
+
+    private fun handleSelectedBitmap(data: Intent?) {
+        val imageUri = data?.getData()
+        imageUri?.let { imageUri ->
+            val bitmap = getCapturedImage(requireContext(), imageUri)
+            bitmap?.let { bitmap ->
+                try {
+                    val bos = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos)
+                } catch (ex: Exception) {
+                    ex.printStackTrace()
+                }
+                imagePick.setImageBitmap(bitmap)
+            }
         }
     }
 

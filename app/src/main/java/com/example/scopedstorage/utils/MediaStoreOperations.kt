@@ -3,12 +3,17 @@ package com.example.scopedstorage.utils
 import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.Parcelable
 import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.scopedstorage.R
 import com.example.scopedstorage.utils.Utils.Companion.ensureDirExists
 import com.example.scopedstorage.utils.Utils.Companion.getAppName
 import com.example.scopedstorage.utils.Utils.Companion.showDialog
@@ -342,6 +347,46 @@ class MediaStoreOperations {
             if (list.size > 0)
                 return list.get(0)
             return null
+        }
+
+        fun getPickImageIntent(context: Context): Intent? {
+            var chooserIntent: Intent? = null
+
+            var intentList: MutableList<Intent> = ArrayList()
+
+            val pickIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+
+            intentList.add(pickIntent)
+
+            if (intentList.size > 0) {
+                chooserIntent = Intent.createChooser(
+                        intentList.get(0),
+                        context.getString(R.string.pick_image)
+                )
+                chooserIntent.putExtra(
+                        Intent.EXTRA_INITIAL_INTENTS,
+                        intentList.toTypedArray<Parcelable>()
+                )
+            }
+
+            return chooserIntent
+        }
+
+        fun getCapturedImage(context: Context, selectedPhotoUri: Uri): Bitmap? {
+            val bitmap = when {
+                !isScopedStorage() -> MediaStore.Images.Media.getBitmap(
+                        context.contentResolver,
+                        selectedPhotoUri
+                )
+                isScopedStorage() -> {
+                    val source = ImageDecoder.createSource(context.contentResolver, selectedPhotoUri)
+                    ImageDecoder.decodeBitmap(source)
+                }
+                else -> null
+            }
+
+            return bitmap
+
         }
     }
 }

@@ -19,6 +19,7 @@
             android:orientation="horizontal">
 
             <ImageView
+                android:background="@android:color/darker_gray"
                 android:scaleType="fitXY"
                 android:id="@+id/imagePick"
                 android:layout_width="80dp"

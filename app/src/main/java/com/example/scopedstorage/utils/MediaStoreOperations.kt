@@ -1,6 +1,7 @@
 package com.example.scopedstorage.utils
 
 import android.app.Activity
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -13,13 +14,16 @@ import android.os.Parcelable
 import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.Fragment
 import com.example.scopedstorage.R
 import com.example.scopedstorage.utils.Utils.Companion.ensureDirExists
 import com.example.scopedstorage.utils.Utils.Companion.getAppName
 import com.example.scopedstorage.utils.Utils.Companion.showDialog
+import com.example.scopedstorage.utils.extensions.getFileExtension
 import dev.dnights.scopedstoragesample.mediastore.data.MediaFileData
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
 import java.util.*
 
 class MediaStoreOperations {
@@ -387,6 +391,69 @@ class MediaStoreOperations {
 
             return bitmap
 
+        }
+
+        fun takePhoto(fragment: Fragment, requestCode: Int = ACTION_IMAGE_CAPTURE_REQUEST_CODE,
+                      folderName: String = getAppName(fragment.requireContext())): Uri? {
+
+            if (isScopedStorage()) {
+                val displayname = getMediaImageName()
+                val contentResolver: ContentResolver = fragment.requireContext().getContentResolver()
+                val contentValues = ContentValues()
+                contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, displayname)
+                contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "${MediaStoreFileType.IMAGE.mimeType}${displayname.getFileExtension()}")
+                contentValues.put(
+                        MediaStore.MediaColumns.RELATIVE_PATH,
+                        Environment.DIRECTORY_PICTURES + File.separator + folderName
+                )
+                val imageUri: Uri? = contentResolver.insert(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        contentValues
+                )
+
+                imageUri?.let {
+                    val camIntent = getImageCaptureIntent(chooserTitle = "", imageUri = imageUri)
+                    fragment.startActivityForResult(camIntent, requestCode)
+                }
+
+                return imageUri
+
+            } else {
+
+                return null
+
+//               implement old method
+
+            }
+
+        }
+
+        fun getImageCaptureIntent(chooserTitle: String, imageUri: Uri): Intent? {
+            var chooserIntent: Intent? = null
+
+            var intentList: MutableList<Intent> = ArrayList()
+
+            val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+
+            intentList.add(takePhotoIntent)
+
+            if (intentList.size > 0) {
+                chooserIntent = Intent.createChooser(
+                        intentList.get(0),
+                        chooserTitle
+                )
+                chooserIntent.putExtra(
+                        Intent.EXTRA_INITIAL_INTENTS,
+                        intentList.toTypedArray<Parcelable>()
+                )
+            }
+
+            return chooserIntent
+        }
+
+        fun getMediaImageName(): String {
+            return "IMG_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()) + ".png"
         }
     }
 }

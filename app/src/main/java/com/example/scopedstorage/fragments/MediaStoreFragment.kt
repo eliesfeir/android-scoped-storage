@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -18,6 +19,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.scopedstorage.R
 import com.example.scopedstorage.adapters.MediaFileAdapter
+import com.example.scopedstorage.utils.ACTION_IMAGE_CAPTURE_REQUEST_CODE
 import com.example.scopedstorage.utils.MediaStoreOperations
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.getCapturedImage
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.getFileByType
@@ -25,6 +27,7 @@ import com.example.scopedstorage.utils.MediaStoreOperations.Companion.getFileLis
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.getPickImageIntent
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.isScopedStorage
 import com.example.scopedstorage.utils.MediaStoreOperations.Companion.removeFileIfExists
+import com.example.scopedstorage.utils.MediaStoreOperations.Companion.takePhoto
 import com.example.scopedstorage.utils.PICK_IMAGE_REQUEST_CODE
 import com.example.scopedstorage.utils.Utils.Companion.getRawUri
 import com.example.scopedstorage.utils.Utils.Companion.showDialog
@@ -39,6 +42,7 @@ import java.io.ByteArrayOutputStream
 class MediaStoreFragment : Fragment() {
 
     private var adapter: MediaFileAdapter? = null
+    private var picUri: Uri? = null
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
@@ -76,6 +80,8 @@ class MediaStoreFragment : Fragment() {
         setupAudioActions()
 
         setupImagePickerAction()
+
+        setupCaptureImageAction()
     }
 
     private fun setupAudioActions() {
@@ -294,23 +300,42 @@ class MediaStoreFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK && requestCode == PICK_IMAGE_REQUEST_CODE) {
-            handleSelectedBitmap(data)
+            val bitmap = getSelectedBitmap(data?.getData())
+            bitmap?.let { bitmap ->
+                imagePick.setImageBitmap(bitmap)
+            }
+        } else if (requestCode == ACTION_IMAGE_CAPTURE_REQUEST_CODE) {
+            val bitmap = getSelectedBitmap(picUri)
+            bitmap?.let { bitmap ->
+                imageCapture.setImageBitmap(bitmap)
+            }?: kotlin.run { picUri=null }
         }
     }
 
-    private fun handleSelectedBitmap(data: Intent?) {
-        val imageUri = data?.getData()
+    private fun getSelectedBitmap(data: Uri?): Bitmap? {
+        val imageUri = data
         imageUri?.let { imageUri ->
-            val bitmap = getCapturedImage(requireContext(), imageUri)
-            bitmap?.let { bitmap ->
-                try {
+            try {
+                val bitmap = getCapturedImage(requireContext(), imageUri)
+                bitmap?.let { bitmap ->
+
                     val bos = ByteArrayOutputStream()
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos)
-                } catch (ex: Exception) {
-                    ex.printStackTrace()
+
+                    return bitmap
                 }
-                imagePick.setImageBitmap(bitmap)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
             }
+
+        }
+
+        return null
+    }
+
+    fun setupCaptureImageAction() {
+        BtnImageCapture.setOnClickListener {
+            picUri = takePhoto(this)
         }
     }
 

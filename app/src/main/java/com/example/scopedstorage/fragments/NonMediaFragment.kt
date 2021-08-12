@@ -25,6 +25,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import com.example.scopedstorage.R
 import com.example.scopedstorage.adapters.DocumentsAdapter
+import com.example.scopedstorage.utils.Utils
 import kotlinx.android.synthetic.main.fragment_non_media.*
 import java.io.File
 import java.io.FileNotFoundException
@@ -249,6 +250,7 @@ class NonMediaFragment : Fragment() {
                     Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
                 tvPdfName.text = "PDF Name: " + documentUri.path.toString()
+                OpenPDFFile(Utils.getPath(activity!!,documentUri)?:"")
             }
         }
 
@@ -264,6 +266,22 @@ class NonMediaFragment : Fragment() {
             loadDirectory(directoryUri)
 
 
+        }
+    }
+
+    fun OpenPDFFile(path:String) {
+        val pdfFile = File(
+            path
+        )
+        if (pdfFile.exists()) //Checking for the file is exist or not
+        {
+            val path = Uri.fromFile(pdfFile)
+            val objIntent = Intent(Intent.ACTION_VIEW)
+            objIntent.setDataAndType(path, "application/pdf")
+            objIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(objIntent) //Staring the pdf viewer
+        }else{
+            Toast.makeText(activity,"Path not found",Toast.LENGTH_LONG).show()
         }
     }
 
